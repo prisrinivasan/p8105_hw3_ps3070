@@ -8,7 +8,7 @@ library(tidyverse)
 library(readxl)
 ```
 
-```{r loading data}
+```{r loading data, message=FALSE}
 library(p8105.datasets)
 data("instacart")
 ```
@@ -43,6 +43,14 @@ instacart %>%
 
   * Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
 
+```{r}
+popular =
+  filter(instacart, aisle == "baking ingredients" | aisle == "dog food care" | aisle == "packaged vegetables fruits") %>%
+  group_by(aisle, product_name) %>% 
+  summarize(count = n()) %>% 
+  filter(count == max(count))
 
+knitr::kable(popular, format = "html", caption = "Most Popular Items per Aisle")
+```
 
   * table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table)
