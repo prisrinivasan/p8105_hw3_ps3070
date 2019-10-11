@@ -6,6 +6,8 @@ output: github_document
 ```{r setup, message=FALSE}
 library(tidyverse)
 library(readxl)
+library(lubridate)
+library(knitr)
 ```
 
 ```{r loading data, message=FALSE}
@@ -21,7 +23,19 @@ data("instacart")
 
 [Insert answers to questions: ]
 
-  * how many aisles, which aisles are most items ordered from
+  * How many aisles are there, and which aisles are the most items ordered from?
+
+```{r aisles, message=FALSE}
+aisles = instacart %>% 
+  group_by(aisle, aisle_id) %>%
+  tally() 
+
+aisles
+```
+
+Based on 
+
+
   * plot showing number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
 
 ```{r aisles cleaning and plot, message=FALSE}
@@ -43,14 +57,58 @@ instacart %>%
 
   * Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
 
-```{r}
-popular =
-  filter(instacart, aisle == "baking ingredients" | aisle == "dog food care" | aisle == "packaged vegetables fruits") %>%
+```{r table with popular item counts}
+popular = instacart %>% 
+  filter(aisle == "baking ingredients" | aisle == "dog food care" | aisle == "packaged vegetables fruits") %>%
   group_by(aisle, product_name) %>% 
   summarize(count = n()) %>% 
   filter(count == max(count))
 
-knitr::kable(popular, format = "html", caption = "Most Popular Items per Aisle")
+kable(popular, format = "html", caption = "Most Popular Items per Aisle")
 ```
 
   * table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table)
+
+```{r mean hour of order table}
+apples_icecream = instacart %>%
+  filter(product_name == "Pink Lady Apple" | product_name == "Coffee Ice Cream") %>%
+  group_by(product_name, order_dow) %>% 
+  summarize(meanhr = mean(order_hour_of_day)) %>%
+  mutate(order_dow = order_dow + 1,
+         order_dow = wday(order_dow, label = TRUE)) %>% #recode numbers to days of week
+  spread(key = order_dow, value = meanhr) %>% 
+  select(product_name, Sun, Mon, Tue, Wed, Thu, Fri, Sat) %>% 
+  rename("Product Name" = product_name) #to make the column name more presentable
+
+kable(apples_icecream, format = "html", caption = "Mean Hour at which Pink Lady Apples and Coffee are Ordered")
+```
+
+
+#PROBLEM 2
+
+The BRFSS dataset can be accessed from the p8105 library.
+```{r loaded brfss, message=FALSE}
+data("brfss_smart2010")
+```
+
+Data cleaning:
+
+  * format the data to use appropriate variable names;
+  * focus on the “Overall Health” topic
+  * include only responses from “Excellent” to “Poor”
+  * organize responses as a factor taking levels ordered from “Poor” to “Excellent”
+
+```{r cleaning brfss, message=FALSE}
+brfss = brfss_smart2010 %>% 
+  janitor::clean_names() %>% 
+  mutate(response = as.factor(response)) %>% 
+  filter(topic == "Overall Health")
+```
+
+
+Then answer the following commenting on results of each:
+
+  * In 2002, which states were observed at 7 or more locations? What about in 2010?
+  * Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
+  * Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State
+
