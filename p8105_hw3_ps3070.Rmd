@@ -25,7 +25,7 @@ data("instacart")
 
   * How many aisles are there, and which aisles are the most items ordered from?
 
-```{r aisles, message=FALSE}
+```{r aisles, message=FALSE, warning=FALSE}
 aisles = instacart %>% 
   group_by(aisle, aisle_id) %>%
   tally() 
@@ -62,7 +62,8 @@ popular = instacart %>%
   filter(aisle == "baking ingredients" | aisle == "dog food care" | aisle == "packaged vegetables fruits") %>%
   group_by(aisle, product_name) %>% 
   summarize(count = n()) %>% 
-  filter(count == max(count))
+  filter(count == max(count)) %>% 
+  rename("Aisle" = aisle, "Product Name" = product_name, "Item Counts" = count)
 
 kable(popular, format = "html", caption = "Most Popular Items per Aisle")
 ```
@@ -101,7 +102,7 @@ Data cleaning:
 ```{r cleaning brfss, message=FALSE}
 brfss = brfss_smart2010 %>% 
   janitor::clean_names() %>% 
-  mutate(response = as.factor(response)) %>% 
+  mutate(response = factor(response, levels = c("Excellent", "Very good", "Good", "Fair", "Poor"))) %>% #selects just those between poor and excellent
   filter(topic == "Overall Health")
 ```
 
@@ -109,6 +110,77 @@ brfss = brfss_smart2010 %>%
 Then answer the following commenting on results of each:
 
   * In 2002, which states were observed at 7 or more locations? What about in 2010?
+
+```{r}
+states_2002 = brfss %>%
+  filter(year == 2002) %>% 
+  group_by(locationabbr) %>% #locationabbr lists by state
+  distinct(locationdesc) %>% #locationdesc describes states by counties
+  tally() %>%
+  filter(n >= 7)
+
+states_2010 = brfss %>%
+  filter(year == 2010) %>% 
+  group_by(locationabbr) %>% #locationabbr lists by state
+  distinct(locationdesc) %>% #locationdesc describes states by counties
+  tally() %>%
+  filter(n >= 7)
+
+kable(states_2002, format = "html", caption = "2002")
+kable(states_2010, format = "html", caption = "2010")
+
+```
+Here, we can see that there were `r nrow(states_2002)` states that were observed at 7 or more locations in 2002: Connecticut, Florida, Massachussetts, North Carolina, New Jersey, and Pennsylvania.
+Likewise, in 2010, there were `r nrow(states_2010)` states observed at 7 or more location in 2010: California, Colorado, Florida, Massachussetts, Maryland, North Carolina, Nebraska, New Jersey, New York, Ohio, Pennsylvania, South Carolina, Texas, Washington.
+
   * Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
+
+```{r excellent dataset and spaghetti plot, message=FALSE, warning=FALSE}
+excellent = brfss %>%
+  filter(response == "Excellent") %>%
+  group_by(year, locationabbr) %>% 
+  summarise(mean_data_value = mean(data_value))
+
+ggplot(excellent, aes(x = year, y = mean_data_value, color = locationabbr)) +
+  geom_line(size = 0.5) +
+  labs(
+    x = "Year",
+    y = "Average Data Value",
+    title = "Average Data Value Across State Locations from 2002 - 2010"
+    ) +
+  theme(legend.title = element_blank())
+```
+
   * Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State
 
+##DO WE NEED HISTOGRAM??
+
+```{r two panel plot, message=FALSE, warning=FALSE}
+responses = brfss %>% 
+  filter(response == c("Excellent", "Very good", "Good", "Fair", "Poor"),
+         locationabbr == "NY",
+         year == c(2006, 2010)) %>% 
+  ggplot(aes(x = response, y = data_value, fill = response)) +
+  geom_col(alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(. ~ year)
+
+responses
+```
+
+
+
+
+# PROBLEM 3
+
+
+
+  * Load, tidy, and otherwise wrangle the data. Your final dataset should include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes. Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
+
+
+
+  * Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
+
+
+
+  * Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph
