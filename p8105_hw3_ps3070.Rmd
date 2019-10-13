@@ -202,6 +202,9 @@ head(accel)
 
 #DESCRIBE RESULTING DATASET
 
+
+  * Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
+
 ```{r total counts, message=FALSE, warning=FALSE}
 accel_total = accel %>% 
   group_by(week, day) %>% 
@@ -212,6 +215,8 @@ kable(accel_total)
 
 #ARE THERE ANY TRENDS?
 
+  * Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph
+  
 ```{r single panel plot, message=FALSE, warning=FALSE}
 accel_plot = accel %>% 
   mutate(hour = minute %/% 60) %>% #the plot is easier to read with an hour variable
@@ -220,15 +225,12 @@ accel_plot = accel %>%
   ggplot(aes(x = hour, y = total_activity_counts, color = day)) + 
     geom_line() + 
   scale_x_continuous(breaks = 0:24) +
-  scale_y_continuous(
-    breaks = c("50,000", "100,000", "150,000", "200,000", "250,000")
-  
+  scale_y_continuous(breaks = c(0, 50000, 100000, 150000, 200000, 250000)) +
+  labs(
+    x = "Hour",
+    y = "Total Activity Counts (in thousands)", 
+    title = "24-hour Activity Time Courses Per Day"
+  )
+
 accel_plot
 ```
-
-
-
-  * Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
-
-
-  * Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph
