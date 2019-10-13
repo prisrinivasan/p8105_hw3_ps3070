@@ -62,7 +62,8 @@ popular = instacart %>%
   filter(aisle == "baking ingredients" | aisle == "dog food care" | aisle == "packaged vegetables fruits") %>%
   group_by(aisle, product_name) %>% 
   summarize(count = n()) %>% 
-  filter(count == max(count)) %>% 
+  top_n(3, count) %>% 
+  arrange(desc(count)) %>% 
   rename("Aisle" = aisle, "Product Name" = product_name, "Item Counts" = count)
 
 kable(popular, format = "html", caption = "Most Popular Items per Aisle")
@@ -81,7 +82,7 @@ apples_icecream = instacart %>%
   select(product_name, Sun, Mon, Tue, Wed, Thu, Fri, Sat) %>% 
   rename("Product Name" = product_name) #to make the column name more presentable
 
-kable(apples_icecream, format = "html", caption = "Mean Hour at which Pink Lady Apples and Coffee are Ordered")
+kable(apples_icecream, format = "html", caption = "Mean Hour at which Pink Lady Apples and Coffee are Ordered", digits = 2)
 ```
 
 
@@ -102,7 +103,7 @@ Data cleaning:
 ```{r cleaning brfss, message=FALSE}
 brfss = brfss_smart2010 %>% 
   janitor::clean_names() %>% 
-  mutate(response = factor(response, levels = c("Excellent", "Very good", "Good", "Fair", "Poor"))) %>% #selects just those between poor and excellent
+  mutate(response = factor(response, levels = c("Poor", "Fair", "Good", "Very good", "Excellent"))) %>% #selects just those between poor and excellent
   filter(topic == "Overall Health")
 ```
 
@@ -157,13 +158,16 @@ ggplot(excellent, aes(x = year, y = mean_data_value, color = locationabbr)) +
 
 ```{r two panel plot, message=FALSE, warning=FALSE}
 responses = brfss %>% 
-  filter(response == c("Excellent", "Very good", "Good", "Fair", "Poor"),
-         locationabbr == "NY",
-         year == c(2006, 2010)) %>% 
+  filter(locationabbr %in% "NY",
+         year %in% c(2006, 2010)) %>% 
   ggplot(aes(x = response, y = data_value, fill = response)) +
   geom_col(alpha = .5) +
   geom_smooth(se = FALSE) + 
-  facet_grid(. ~ year)
+  facet_grid(. ~ year) + 
+  labs(x = "Response",
+       y = "Data Value",
+       title = "Distribution of Data Value for Responses in NY State in 2006 vs 2010"
+  )
 
 responses
 ```
@@ -173,14 +177,58 @@ responses
 
 # PROBLEM 3
 
-
-
   * Load, tidy, and otherwise wrangle the data. Your final dataset should include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes. Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
+
+
+```{r cleaning accel, message=FALSE, warning=FALSE}
+accel = read_csv(file = "./data/accel_data.csv") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "minute",
+    values_to = "activity_counts") %>% 
+  mutate(
+    type = if_else(
+      day %in% c("Saturday", "Sunday"),"weekend", "weekday"),
+    day = as.factor(day), #since we can consider it to be ordered 
+    day_id = as.numeric(day_id),
+    minute = str_replace(minute, "activity_", ""),
+    minute = as.numeric(minute),
+    minute = as.numeric(minute),
+    activity_counts = as.numeric(activity_counts))
+
+head(accel)
+```
+
+#DESCRIBE RESULTING DATASET
+
+```{r total counts, message=FALSE, warning=FALSE}
+accel_total = accel %>% 
+  group_by(week, day) %>% 
+  summarize(total_activity_counts = sum(activity_counts))
+
+kable(accel_total)
+```
+
+#ARE THERE ANY TRENDS?
+
+```{r single panel plot, message=FALSE, warning=FALSE}
+accel_plot = accel %>% 
+  mutate(hour = minute %/% 60) %>% #the plot is easier to read with an hour variable
+  group_by(day, hour) %>%
+  summarize(total_activity_counts = sum(activity_counts)) %>%
+  ggplot(aes(x = hour, y = total_activity_counts, color = day)) + 
+    geom_line() + 
+  scale_x_continuous(breaks = 0:24) +
+  scale_y_continuous(
+    breaks = c("50,000", "100,000", "150,000", "200,000", "250,000")
+  
+accel_plot
+```
 
 
 
   * Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
-
 
 
   * Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph
