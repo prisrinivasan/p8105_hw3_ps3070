@@ -15,28 +15,21 @@ library(p8105.datasets)
 data("instacart")
 ```
 
-[Insert short description including: ]
+The instacart dataset includes data from online grocery orders. The dataset includes `r nrow(instacart)` rows/observations and `r ncol(instacart)` columns/variables. Key variables include identifiers for each order, product, customer, aisle, and department; the day/hour of purchase; and product, aisle, and department names. For example, we can see that `r pull(instacart, product_name)[10]` was ordered from the aisle containing `r pull(instacart, aisle)[10]` in the department including `r pull(instacart, department)[10]` on day `r pull(instacart, order_dow)[10]` of the week.
 
-  * size and structure
-  * describing some key variables
-  * illustrative examples of observations
 
-[Insert answers to questions: ]
-
-  * How many aisles are there, and which aisles are the most items ordered from?
 
 ```{r aisles, message=FALSE, warning=FALSE}
 aisles = instacart %>% 
   group_by(aisle, aisle_id) %>%
-  tally() 
-
+  tally() %>% 
+  arrange(desc(n))
 aisles
 ```
 
-Based on 
+The previous code chunk shows the aisles and aisle IDs in descending order of number of items ordered. There are `r nrow(aisles)` aisles, and the aisles with the most items ordered are `r pull(aisles, aisle)[1]` with `r pull(aisles, n)[1]` orders, `r pull(aisles, aisle)[2]` with `r pull(aisles, n)[2]` orders, and `r pull(aisles, aisle)[3]` with `r pull(aisles, n)[3]` orders.
 
-
-  * plot showing number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
+Limited to aisles with more than 10000 items observed, the plot generated below shows the number of items ordered in each aisle.
 
 ```{r aisles cleaning and plot, message=FALSE}
 instacart %>%
@@ -55,7 +48,9 @@ instacart %>%
   theme(text = element_text(size = 10))
 ```
 
-  * Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
+
+
+The table below shows the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits” along with the number of times each item was ordered.
 
 ```{r table with popular item counts}
 popular = instacart %>% 
@@ -69,7 +64,8 @@ popular = instacart %>%
 kable(popular, format = "html", caption = "Most Popular Items per Aisle")
 ```
 
-  * table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table)
+
+The 2x7 table below shows the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week.
 
 ```{r mean hour of order table}
 apples_icecream = instacart %>%
@@ -93,12 +89,7 @@ The BRFSS dataset can be accessed from the p8105 library.
 data("brfss_smart2010")
 ```
 
-Data cleaning:
-
-  * format the data to use appropriate variable names;
-  * focus on the “Overall Health” topic
-  * include only responses from “Excellent” to “Poor”
-  * organize responses as a factor taking levels ordered from “Poor” to “Excellent”
+The data is cleaned below to use appropriate variable names, to focus on the “Overall Health” topic, to include only responses from “Excellent” to “Poor”, and to organize responses as a factor taking levels ordered from “Poor” to “Excellent”.
 
 ```{r cleaning brfss, message=FALSE}
 brfss = brfss_smart2010 %>% 
@@ -108,10 +99,7 @@ brfss = brfss_smart2010 %>%
 ```
 
 
-Then answer the following commenting on results of each:
-
-  * In 2002, which states were observed at 7 or more locations? What about in 2010?
-
+The tables below show states observed at 7 or more locations in 2002 vs 2010.
 ```{r}
 states_2002 = brfss %>%
   filter(year == 2002) %>% 
@@ -131,10 +119,11 @@ kable(states_2002, format = "html", caption = "2002")
 kable(states_2010, format = "html", caption = "2010")
 
 ```
-Here, we can see that there were `r nrow(states_2002)` states that were observed at 7 or more locations in 2002: Connecticut, Florida, Massachussetts, North Carolina, New Jersey, and Pennsylvania.
-Likewise, in 2010, there were `r nrow(states_2010)` states observed at 7 or more location in 2010: California, Colorado, Florida, Massachussetts, Maryland, North Carolina, Nebraska, New Jersey, New York, Ohio, Pennsylvania, South Carolina, Texas, Washington.
+Above, we can see that there were `r nrow(states_2002)` states that were observed at 7 or more locations in 2002: Connecticut, Florida, Massachussetts, North Carolina, New Jersey, and Pennsylvania.
+Likewise, in 2010, there were `r nrow(states_2010)` states observed at 7 or more location in 2010: California, Colorado, Florida, Massachussetts, Maryland, North Carolina, Nebraska, New Jersey, New York, Ohio, Pennsylvania, South Carolina, Texas, Washington. Based on this, we can tell that observations expanded from 2002 to 2010.
 
-  * Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
+
+The dataset below shows year, state, and an average data value across locations within a state, limited to Excellent responses. From this dataset, a spaghetti plot was generated to depict the average value over time within each state.
 
 ```{r excellent dataset and spaghetti plot, message=FALSE, warning=FALSE}
 excellent = brfss %>%
@@ -154,7 +143,7 @@ ggplot(excellent, aes(x = year, y = mean_data_value, color = locationabbr)) +
 
   * Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State
 
-##DO WE NEED HISTOGRAM??
+The two-panel plot below shows the distribution of `data_value` for responses "Poor" to "Excellent" among locations in NY state for 2006 and 2010 side by side.
 
 ```{r two panel plot, message=FALSE, warning=FALSE}
 responses = brfss %>% 
