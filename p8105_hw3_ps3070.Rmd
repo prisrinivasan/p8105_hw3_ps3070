@@ -17,7 +17,7 @@ data("instacart")
 
 The instacart dataset includes data from online grocery orders. The dataset includes `r nrow(instacart)` rows/observations and `r ncol(instacart)` columns/variables. Key variables include identifiers for each order, product, customer, aisle, and department; the day/hour of purchase; and product, aisle, and department names. For example, we can see that `r pull(instacart, product_name)[10]` was ordered from the aisle containing `r pull(instacart, aisle)[10]` in the department including `r pull(instacart, department)[10]` on day `r pull(instacart, order_dow)[10]` of the week.
 
-
+The first few observations are printed below.
 
 ```{r aisles, message=FALSE, warning=FALSE}
 aisles = instacart %>% 
@@ -31,7 +31,7 @@ The previous code chunk shows the aisles and aisle IDs in descending order of nu
 
 Limited to aisles with more than 10000 items observed, the plot generated below shows the number of items ordered in each aisle.
 
-```{r aisles cleaning and plot, message=FALSE}
+```{r aisles cleaning and plot, message=FALSE, warning=FALSE}
 instacart %>%
   group_by(aisle) %>% 
   tally() %>% #creates n variable so that I can make aisle a factor variable with levels based on n
@@ -49,10 +49,9 @@ instacart %>%
 ```
 
 
-
 The table below shows the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits” along with the number of times each item was ordered.
 
-```{r table with popular item counts}
+```{r table with popular item counts, message=FALSE, warning=FALSE}
 popular = instacart %>% 
   filter(aisle == "baking ingredients" | aisle == "dog food care" | aisle == "packaged vegetables fruits") %>%
   group_by(aisle, product_name) %>% 
@@ -67,7 +66,7 @@ kable(popular, format = "html", caption = "Most Popular Items per Aisle")
 
 The 2x7 table below shows the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week.
 
-```{r mean hour of order table}
+```{r mean hour of order table, message=FALSE, warning=FALSE}
 apples_icecream = instacart %>%
   filter(product_name == "Pink Lady Apple" | product_name == "Coffee Ice Cream") %>%
   group_by(product_name, order_dow) %>% 
@@ -85,13 +84,13 @@ kable(apples_icecream, format = "html", caption = "Mean Hour at which Pink Lady 
 #PROBLEM 2
 
 The BRFSS dataset can be accessed from the p8105 library.
-```{r loaded brfss, message=FALSE}
+```{r loaded brfss, message=FALSE, warning=FALSE}
 data("brfss_smart2010")
 ```
 
 The data is cleaned below to use appropriate variable names, to focus on the “Overall Health” topic, to include only responses from “Excellent” to “Poor”, and to organize responses as a factor taking levels ordered from “Poor” to “Excellent”.
 
-```{r cleaning brfss, message=FALSE}
+```{r cleaning brfss, message=FALSE, warning=FALSE}
 brfss = brfss_smart2010 %>% 
   janitor::clean_names() %>% 
   mutate(response = factor(response, levels = c("Poor", "Fair", "Good", "Very good", "Excellent"))) %>% #selects just those between poor and excellent
@@ -100,7 +99,8 @@ brfss = brfss_smart2010 %>%
 
 
 The tables below show states observed at 7 or more locations in 2002 vs 2010.
-```{r}
+
+```{r, message=FALSE, warning=FALSE}
 states_2002 = brfss %>%
   filter(year == 2002) %>% 
   group_by(locationabbr) %>% #locationabbr lists by state
@@ -119,9 +119,9 @@ kable(states_2002, format = "html", caption = "2002")
 kable(states_2010, format = "html", caption = "2010")
 
 ```
+
 Above, we can see that there were `r nrow(states_2002)` states that were observed at 7 or more locations in 2002: Connecticut, Florida, Massachussetts, North Carolina, New Jersey, and Pennsylvania.
 Likewise, in 2010, there were `r nrow(states_2010)` states observed at 7 or more location in 2010: California, Colorado, Florida, Massachussetts, Maryland, North Carolina, Nebraska, New Jersey, New York, Ohio, Pennsylvania, South Carolina, Texas, Washington. Based on this, we can tell that observations expanded from 2002 to 2010.
-
 
 The dataset below shows year, state, and an average data value across locations within a state, limited to Excellent responses. From this dataset, a spaghetti plot was generated to depict the average value over time within each state.
 
@@ -141,9 +141,12 @@ ggplot(excellent, aes(x = year, y = mean_data_value, color = locationabbr)) +
   theme(legend.title = element_blank())
 ```
 
-  * Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State
+As the plot contains a line for each state, it is a bit difficult to read, but overall we can see that the average data value has been maintained or slightly decreased from 2002 to 2010 with some states experiencing dips in certain years.
+
 
 The two-panel plot below shows the distribution of `data_value` for responses "Poor" to "Excellent" among locations in NY state for 2006 and 2010 side by side.
+
+We can see that the distributions for both 2006 and 2010 show the majority of responses in the `Very good`and `Good` categories. Both charts are left-skewed.
 
 ```{r two panel plot, message=FALSE, warning=FALSE}
 responses = brfss %>% 
@@ -162,12 +165,9 @@ responses
 ```
 
 
-
-
 # PROBLEM 3
 
-  * Load, tidy, and otherwise wrangle the data. Your final dataset should include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes. Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
-
+Below, I loaded and tidied the accelerometer data making sure to include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes.
 
 ```{r cleaning accel, message=FALSE, warning=FALSE}
 accel = read_csv(file = "./data/accel_data.csv") %>% 
@@ -185,27 +185,28 @@ accel = read_csv(file = "./data/accel_data.csv") %>%
     minute = as.numeric(minute),
     minute = as.numeric(minute),
     activity_counts = as.numeric(activity_counts))
-
-head(accel)
 ```
 
-#DESCRIBE RESULTING DATASET
+The dataset created above, `accel`, contains an additional variable called `type` to indicate the day type - weekday or weekend. The dataset was pivoted to include a column for each minute (i.e. each minute was treated as a new observation). The resulting dataset includes `r nrow(accel)` rows/observations and `r ncol(accel)` columns/variables. The final variables that exist include `r colnames(accel)` to make the dataset easier to work with.
 
+Below, I created an aggregate variable showing total activity counts across minutes. I created a table below showing these totals.
 
-  * Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
+We can see that activity counts generally decreased on Sundays from week 1 to week 5, were fairly variable on Saturdays, and were more steady on Wednesdays than other days of the week.
 
 ```{r total counts, message=FALSE, warning=FALSE}
 accel_total = accel %>% 
   group_by(week, day) %>% 
-  summarize(total_activity_counts = sum(activity_counts))
+  summarize(total_activity_counts = sum(activity_counts)) %>% 
+  pivot_wider(names_from = day,
+              values_from = total_activity_counts) %>% 
+  select(week, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday)
 
 kable(accel_total)
 ```
 
-#ARE THERE ANY TRENDS?
 
-  * Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph
-  
+Below is a single-panel plot showing the 24-hour activity time courses for each day and using color to indicate day of the week. We can see the least activity in the middle of the night, from midnight (0) to 5AM. We also see most activity around 11AM on Sunday and around 8 to 9 PM on Fridays (20 and 21). Other days, there is more activity from 6 or 7AM until 9 or 10PM at night.
+
 ```{r single panel plot, message=FALSE, warning=FALSE}
 accel_plot = accel %>% 
   mutate(hour = minute %/% 60) %>% #the plot is easier to read with an hour variable
